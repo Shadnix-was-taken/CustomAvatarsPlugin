@@ -32,14 +32,21 @@ namespace AvatarScriptPack
 
 		public void OnFirstPersonEnabledChanged(bool firstPersonEnabled)
 		{
-			if (_deadSwitch)
+			try
 			{
-				return;
+				if (_deadSwitch)
+				{
+					return;
+				}
+				for (var i = 0; i < Exclude.Length; i++)
+				{
+					var excludeObject = Exclude[i];
+					excludeObject.layer = AvatarLayers.OnlyInThirdPerson;
+				}
 			}
-			for (var i = 0; i < Exclude.Length; i++)
+			catch (System.Exception e)
 			{
-				var excludeObject = Exclude[i];
-				excludeObject.layer = AvatarLayers.OnlyInThirdPerson;
+				Plugin.Log(e.StackTrace);
 			}
 		}
 

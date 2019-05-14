@@ -3,6 +3,8 @@ using VRUI;
 using CustomUI.BeatSaber;
 using CustomUI.Settings;
 using TMPro;
+using System.Collections.Generic;
+using CustomUI.Utilities;
 
 namespace CustomAvatar
 {
@@ -21,7 +23,8 @@ namespace CustomAvatar
 			containerRect.anchorMax = new Vector2(0.95f, 1.0f);
 			containerRect.sizeDelta = new Vector2(0, 0);
 
-			SubMenu container = new SubMenu(containerRect); 
+			SubMenu container = new SubMenu(containerRect);
+			List<ListViewController> loadedSettings = new List<ListViewController>();
 
 			System.Action<RectTransform, float, float, float, float, float, float> relative_layout =
 				(RectTransform rt, float x, float y, float w, float h, float pivotx, float pivoty) =>
@@ -89,11 +92,13 @@ namespace CustomAvatar
 			boolFirstPerson.GetValue = () => Plugin.Instance.FirstPersonEnabled ? 1f : 0f;
 			boolFirstPerson.SetValue = (value) => Plugin.Instance.FirstPersonEnabled = value != 0f;
 			boolFirstPerson.Init();
+			loadedSettings.Add(boolFirstPerson);
 
 			boolRotatePreviewAvatar.GetTextForValue = (value) => value != 0f ? "ON" : "OFF";
 			boolRotatePreviewAvatar.GetValue = () => Plugin.Instance.RotatePreviewEnabled ? 1f : 0f;
 			boolRotatePreviewAvatar.SetValue = (value) => Plugin.Instance.RotatePreviewEnabled = value != 0f;
 			boolRotatePreviewAvatar.Init();
+			loadedSettings.Add(boolRotatePreviewAvatar);
 
 			listResizePolicy.GetTextForValue = (value) => new string[] { "Arms Length", "Height", "Never" }[(int)value];
 			listResizePolicy.GetValue = () => (int)Plugin.Instance.AvatarTailor.ResizePolicy;
@@ -103,6 +108,7 @@ namespace CustomAvatar
 				Plugin.Instance.PlayerAvatarManager.ResizePlayerAvatar();
 			};
 			listResizePolicy.Init();
+			loadedSettings.Add(listResizePolicy);
 
 			boolFloorMovePolicy.GetTextForValue = (value) => (value != 0f) ? "ON" : "OFF";
 			boolFloorMovePolicy.GetValue = () => Plugin.Instance.AvatarTailor.FloorMovePolicy == AvatarTailor.FloorMovePolicyType.AllowMove ? 1f : 0f;
@@ -112,6 +118,14 @@ namespace CustomAvatar
 				Plugin.Instance.PlayerAvatarManager.ResizePlayerAvatar();
 			};
 			boolFloorMovePolicy.Init();
+			loadedSettings.Add(boolFloorMovePolicy);
+
+			foreach (ListViewController list in loadedSettings)
+			{
+				list.InvokePrivateMethod("OnDisable", new object[] { });
+				list.InvokePrivateMethod("OnEnable", new object[] { });
+				Plugin.Log("Reset " + list.name);
+			}
 		}
 	}
 }
