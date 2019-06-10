@@ -1,27 +1,24 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IllusionPlugin;
+using IPA;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR;
+using Logger = CustomAvatar.Util.Logger;
 
 namespace CustomAvatar
 {
-	public class Plugin : IPlugin
+	public class Plugin : IBeatSaberPlugin
 	{
 		private const string CustomAvatarsPath = "CustomAvatars";
 		private const string FirstPersonEnabledKey = "avatarFirstPerson";
 		private const string PreviousAvatarKey = "previousAvatar";
-		private const string RotatePreviewEnabledKey = "rotatePreview";
 
-		private bool _init;
 		private bool _firstPersonEnabled;
 		private AvatarUI _avatarUI;
 
-		private WaitForSecondsRealtime _sceneLoadWait = new WaitForSecondsRealtime(0.1f);
 		private GameScenesManager _scenesManager;
 		private static bool _isTrackerAsHand;
 
@@ -32,18 +29,19 @@ namespace CustomAvatar
 			set
 			{
 				_isTrackerAsHand = value;
-				List<XRNodeState> notes = new List<XRNodeState>();
+				List<XRNodeState> nodes = new List<XRNodeState>();
 				Trackers = new List<XRNodeState>();
-				InputTracking.GetNodeStates(notes);
-				foreach (XRNodeState note in notes)
+				InputTracking.GetNodeStates(nodes);
+				foreach (XRNodeState node in nodes)
 				{
-					if (note.nodeType != XRNode.HardwareTracker || (!InputTracking.GetNodeName(note.uniqueID).Contains("LHR-") && !InputTracking.GetNodeName(note.uniqueID).Contains("Vive Controller MV S/N")))
+					Logger.Log($"XRNode: {InputTracking.GetNodeName(node.uniqueID)} - {node.nodeType}");
+					if (node.nodeType != XRNode.HardwareTracker || (!InputTracking.GetNodeName(node.uniqueID).Contains("LHR-") && !InputTracking.GetNodeName(node.uniqueID).Contains("Vive Controller MV S/N")))
 						continue;
-					Trackers.Add(note);
+					Trackers.Add(node);
 				}
 				if (Trackers.Count == 0)
 					_isTrackerAsHand = false;
-				Console.WriteLine("IsTrackerAsHand : " + IsTrackerAsHand);
+				Logger.Log("IsTrackerAsHand : " + IsTrackerAsHand);
 			}
 		}
 
@@ -52,16 +50,17 @@ namespace CustomAvatar
 			get { return Plugin.FullBodyTrackingType != Plugin.TrackingType.None; ; }
 			set
 			{
-				List<XRNodeState> notes = new List<XRNodeState>();
+				List<XRNodeState> nodes = new List<XRNodeState>();
 				Trackers = new List<XRNodeState>();
-				InputTracking.GetNodeStates(notes);
-				foreach (XRNodeState note in notes)
+				InputTracking.GetNodeStates(nodes);
+				foreach (XRNodeState node in nodes)
 				{
-					if (note.nodeType != XRNode.HardwareTracker || !InputTracking.GetNodeName(note.uniqueID).Contains("LHR-") && !InputTracking.GetNodeName(note.uniqueID).Contains("Vive Controller MV S/N"))
+					Logger.Log($"XRNode: {InputTracking.GetNodeName(node.uniqueID)} - {node.nodeType}");
+					if (node.nodeType != XRNode.HardwareTracker || !InputTracking.GetNodeName(node.uniqueID).Contains("LHR-") && !InputTracking.GetNodeName(node.uniqueID).Contains("Vive Controller MV S/N"))
 						continue;
-					Trackers.Add(note);
+					Trackers.Add(node);
 				}
-				if (Trackers.Count >= 0 && Trackers.Count <= 3)
+				if (Trackers.Count > 0 && Trackers.Count <= 3)
 					Plugin.FullBodyTrackingType = (Plugin.TrackingType)Plugin.Trackers.Count;
 				else
 					Plugin.FullBodyTrackingType = Plugin.TrackingType.None;
@@ -75,14 +74,9 @@ namespace CustomAvatar
 					}
 				}
 				bool isFullBodyTracking = Plugin.IsFullBodyTracking;
-				Console.WriteLine(string.Concat("IsFullBodyTracking : ", isFullBodyTracking.ToString()));
-				Console.WriteLine(string.Concat("FullBodyTrackingType: ", FullBodyTrackingType.ToString()));
+				Logger.Log(string.Concat("IsFullBodyTracking : ", isFullBodyTracking.ToString()));
+				Logger.Log(string.Concat("FullBodyTrackingType: ", FullBodyTrackingType.ToString()));
 			}
-		}
-		
-		public Plugin()
-		{
-			Instance = this;
 		}
 
 		public event Action<bool> FirstPersonEnabledChanged;
@@ -110,10 +104,7 @@ namespace CustomAvatar
 					PlayerPrefs.DeleteKey(FirstPersonEnabledKey);
 				}
 
-				if (FirstPersonEnabledChanged != null)
-				{
-					FirstPersonEnabledChanged(value);
-				}
+				FirstPersonEnabledChanged?.Invoke(value);
 			}
 		}
 
@@ -131,63 +122,33 @@ namespace CustomAvatar
 			set;
 		}
 
-		//public bool RotatePreviewEnabled
-		//{
-		//	get { return AvatarPreviewRotation.rotatePreview; }
-		//	set
-		//	{
-		//		if (AvatarPreviewRotation.rotatePreview == value) return;
-
-		//		AvatarPreviewRotation.rotatePreview = value;
-
-		//		if (value)
-		//		{
-		//			PlayerPrefs.SetInt(RotatePreviewEnabledKey, 0);
-		//		}
-		//		else
-		//		{
-		//			PlayerPrefs.DeleteKey(RotatePreviewEnabledKey);
-		//		}
-		//	}
-		//}
-
 		public string Name
 		{
-			get { return "Custom Avatars Plugin"; }
+			get { return "Custom Avatars"; }
 		}
 
 		public string Version
 		{
-			get { return "4.6.2"; }
+			get { return "4.7.0"; }
 		}
 
-		public static void Log(object message)
+		public void Init(IPA.Logging.Logger log)
 		{
-			string fullMsg = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.FFF}] [CustomAvatarsPlugin] {message}";
+			Util.Logger.logger = log;
+			Instance = this;
 
-			Debug.Log(fullMsg);
-			File.AppendAllText("CustomAvatarsPlugin-log.txt", fullMsg + Environment.NewLine);
-		}
-
-		public void OnApplicationStart()
-		{
-			if (_init) return;
-			_init = true;
-			
-			File.WriteAllText("CustomAvatarsPlugin-log.txt", string.Empty);
-			
 			AvatarLoader = new AvatarLoader(CustomAvatarsPath, AvatarsLoaded);
 			AvatarTailor = new AvatarTailor();
 			_avatarUI = new AvatarUI();
-			
+
 			FirstPersonEnabled = PlayerPrefs.HasKey(FirstPersonEnabledKey);
 			//RotatePreviewEnabled = PlayerPrefs.HasKey(RotatePreviewEnabledKey);
-			SceneManager.sceneLoaded += SceneManagerOnSceneLoaded;
+			SceneManager.sceneLoaded += OnSceneLoaded;
 		}
 
 		public void OnApplicationQuit()
 		{
-			SceneManager.sceneLoaded -= SceneManagerOnSceneLoaded;
+			SceneManager.sceneLoaded -= OnSceneLoaded;
 
 			if (PlayerAvatarManager == null) return;
 			PlayerAvatarManager.AvatarChanged -= PlayerAvatarManagerOnAvatarChanged;
@@ -200,7 +161,7 @@ namespace CustomAvatar
 		{
 			if (loadedAvatars.Count == 0)
 			{
-				Log("No custom avatars found in path " + Path.GetFullPath(CustomAvatarsPath));
+				Logger.Log("No custom avatars found in path " + Path.GetFullPath(CustomAvatarsPath));
 				return;
 			}
 
@@ -217,7 +178,7 @@ namespace CustomAvatar
 			IsFullBodyTracking = true;
 		}
 
-		private void SceneManagerOnSceneLoaded(Scene newScene, LoadSceneMode mode)
+		public void OnSceneLoaded(Scene newScene, LoadSceneMode mode)
 		{
 			if (_scenesManager == null)
 			{
@@ -273,7 +234,7 @@ namespace CustomAvatar
 				int policy = (int)Plugin.Instance.AvatarTailor.ResizePolicy + 1;
 				if (policy > 2) policy = 0;
 				Plugin.Instance.AvatarTailor.ResizePolicy = (AvatarTailor.ResizePolicyType)policy;
-				Log($"Set Resize Policy to {Plugin.Instance.AvatarTailor.ResizePolicy}");
+				Logger.Log($"Set Resize Policy to {Plugin.Instance.AvatarTailor.ResizePolicy}");
 				Plugin.Instance.PlayerAvatarManager.ResizePlayerAvatar();
 			}
 			else if (Input.GetKeyDown(KeyCode.Insert))
@@ -282,14 +243,14 @@ namespace CustomAvatar
 					Plugin.Instance.AvatarTailor.FloorMovePolicy = AvatarTailor.FloorMovePolicyType.NeverMove;
 				else
 					Plugin.Instance.AvatarTailor.FloorMovePolicy = AvatarTailor.FloorMovePolicyType.AllowMove;
-				Log($"Set Floor Move Policy to {Plugin.Instance.AvatarTailor.FloorMovePolicy}");
+				Logger.Log($"Set Floor Move Policy to {Plugin.Instance.AvatarTailor.FloorMovePolicy}");
 				Plugin.Instance.PlayerAvatarManager.ResizePlayerAvatar();
 			}
 		}
 
 		private void SetCameraCullingMask(Camera camera)
 		{
-			Log("Adding third person culling mask to " + camera.name);
+			Logger.Log("Adding third person culling mask to " + camera.name);
 
 			camera.cullingMask &= ~(1 << AvatarLayers.OnlyInThirdPerson);
 			camera.cullingMask |= 1 << AvatarLayers.OnlyInFirstPerson;
@@ -297,14 +258,22 @@ namespace CustomAvatar
 
 		public void OnFixedUpdate()
 		{
+
 		}
 
-		public void OnLevelWasInitialized(int level)
+		public void OnSceneUnloaded(Scene scene)
 		{
+
 		}
 
-		public void OnLevelWasLoaded(int level)
+		public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
 		{
+
+		}
+
+		public void OnApplicationStart()
+		{
+
 		}
 	}
 }

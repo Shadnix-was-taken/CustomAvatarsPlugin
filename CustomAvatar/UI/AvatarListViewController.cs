@@ -8,6 +8,7 @@ using CustomUI.BeatSaber;
 using CustomUI.Utilities;
 using TMPro;
 using System.Collections.Generic;
+using Logger = CustomAvatar.Util.Logger;
 
 namespace CustomAvatar
 {
@@ -94,17 +95,17 @@ namespace CustomAvatar
 				try
 				{
 #if DEBUG
-					Console.WriteLine("AddToArray -> " + _AvatarIndex);
+					Logger.Log("AddToArray -> " + _AvatarIndex);
 #endif
 					avatar.Load(AddToArray);
 #if DEBUG
-					Console.WriteLine("AddToArray => " + _AvatarIndex + " (" + Plugin.Instance.AvatarLoader.IndexOf(avatar) + ") | " + avatar.FullPath);
+					Logger.Log("AddToArray => " + _AvatarIndex + " (" + Plugin.Instance.AvatarLoader.IndexOf(avatar) + ") | " + avatar.FullPath);
 #endif
 				}
 				catch (Exception e)
 				{
 #if DEBUG
-					Console.WriteLine(_AvatarIndex + " | " + e);
+					Logger.Log(_AvatarIndex + " | " + e);
 #endif
 				}
 			}
@@ -112,11 +113,11 @@ namespace CustomAvatar
 			void AddToArray(CustomAvatar avatar, AvatarLoadResult _loadResult)
 			{
 #if DEBUG
-				Console.WriteLine("AddToArray == " + AvatarLoadResult.Completed);
+				Logger.Log("AddToArray == " + AvatarLoadResult.Completed);
 #endif
 				if (_loadResult != AvatarLoadResult.Completed)
 				{
-					Plugin.Log("Avatar " + avatar.FullPath + " failed to load");
+					Logger.Log("Avatar " + avatar.FullPath + " failed to load");
 					return;
 				}
 				AvatarIndex = Plugin.Instance.AvatarLoader.IndexOf(avatar);
@@ -130,7 +131,7 @@ namespace CustomAvatar
 
 				_loadedCount++;
 #if DEBUG
-				Console.WriteLine("(" + _loadedCount + "/" + ((int)AvatarList.Count()) + ") #" + AvatarIndex);
+				Logger.Log("(" + _loadedCount + "/" + ((int)AvatarList.Count()) + ") #" + AvatarIndex);
 #endif
 				//if (_loadedCount == (AvatarList.Count()))
 				if (true)
@@ -232,7 +233,7 @@ namespace CustomAvatar
 			{
 				cellInfo.name = System.IO.Path.GetFileName(AvatarList[row].FullPath) +" failed to load";
 				cellInfo.authorName = "Make sure it's not a duplicate avatar.";
-				cellInfo.coverImage = null;
+				cellInfo.rawImageTexture = null;
 			}
 			else
 			{
@@ -240,18 +241,23 @@ namespace CustomAvatar
 				{
 					cellInfo.name = __AvatarNames[row];
 					cellInfo.authorName = __AvatarAuthors[row];
-					cellInfo.coverImage = __AvatarCovers[row] ?? Sprite.Create(Texture2D.blackTexture, new Rect(), Vector2.zero);
+					cellInfo.rawImageTexture = __AvatarCovers[row] ? __AvatarCovers[row].texture : Texture2D.blackTexture;
 				}
 				catch (Exception e)
 				{
 					cellInfo.name = "If you see this yell at Assistant";
 					cellInfo.authorName = "because she fucked up";
-					cellInfo.coverImage = null;
-					Console.WriteLine(e);
+					cellInfo.rawImageTexture = Texture2D.blackTexture;
+					Logger.Log(e.StackTrace, Logger.LogLevel.Error);
 				}
 			}
 
-			tableCell.SetDataFromLevel(cellInfo);
+			tableCell.SetPrivateField("_beatmapCharacteristicAlphas", new float[0]);
+			tableCell.SetPrivateField("_beatmapCharacteristicImages", new UnityEngine.UI.Image[0]);
+
+			tableCell.GetPrivateField<TextMeshProUGUI>("_songNameText").text = cellInfo.name;
+			tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").text = cellInfo?.authorName;
+			tableCell.GetPrivateField<UnityEngine.UI.RawImage>("_coverRawImage").texture = cellInfo.rawImageTexture;
 
 			return tableCell;
 		}
