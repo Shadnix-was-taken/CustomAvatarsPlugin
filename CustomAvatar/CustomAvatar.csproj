@@ -94,6 +94,10 @@
     <Compile Include="AvatarEventsPlayer.cs" />
     <Compile Include="AvatarPrefab.cs" />
     <Compile Include="AvatarLoadResult.cs" />
+    <Compile Include="Dynamic Bones\DynamicBone.cs" />
+    <Compile Include="Dynamic Bones\DynamicBoneCollider.cs" />
+    <Compile Include="Dynamic Bones\DynamicBoneColliderBase.cs" />
+    <Compile Include="Dynamic Bones\DynamicBonePlaneCollider.cs" />
     <Compile Include="EventFilterBehaviour.cs" />
     <Compile Include="EventFilters.cs" />
     <Compile Include="IAvatarFullBodyInput.cs" />
@@ -115,10 +119,7 @@
     <Compile Include="UI\AvatarUI.cs" />
     <Compile Include="UI\MirrorController.cs" />
     <Compile Include="Util\Logger.cs" />
-    <Compile Include="Util\ReflectionUtil.cs" />
     <Compile Include="VRIK\AxisTools.cs" />
-    <Compile Include="VRIK\DynamicBone.cs" />
-    <Compile Include="VRIK\DynamicBoneCollider.cs" />
     <Compile Include="VRIK\Hierarchy.cs" />
     <Compile Include="VRIK\IK.cs" />
     <Compile Include="VRIK\IKManager.cs" />
@@ -146,10 +147,13 @@
     <EmbeddedResource Include="manifest.json" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\KlouOWO.png" />
+    <EmbeddedResource Include="Resources\KlouNom.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\KlouNom.png" />
+    <EmbeddedResource Include="Resources\hat-wizard-pale.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\hat-wizard-error.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

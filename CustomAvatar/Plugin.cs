@@ -41,7 +41,7 @@ namespace CustomAvatar
 				}
 				if (Trackers.Count == 0)
 					_isTrackerAsHand = false;
-				Logger.Log("IsTrackerAsHand : " + IsTrackerAsHand);
+				//Logger.Log("IsTrackerAsHand : " + IsTrackerAsHand);
 			}
 		}
 
@@ -56,7 +56,7 @@ namespace CustomAvatar
 				foreach (XRNodeState node in nodes)
 				{
 					Logger.Log($"XRNode: {InputTracking.GetNodeName(node.uniqueID)} - {node.nodeType}");
-					if (node.nodeType != XRNode.HardwareTracker || !InputTracking.GetNodeName(node.uniqueID).Contains("LHR-") && !InputTracking.GetNodeName(node.uniqueID).Contains("Vive Controller MV S/N"))
+					if (node.nodeType != XRNode.HardwareTracker || !(InputTracking.GetNodeName(node.uniqueID).Contains("LHR-") || InputTracking.GetNodeName(node.uniqueID).Contains("d4vr")) && !InputTracking.GetNodeName(node.uniqueID).Contains("Vive Controller MV S/N"))
 						continue;
 					Trackers.Add(node);
 				}
@@ -129,7 +129,7 @@ namespace CustomAvatar
 
 		public string Version
 		{
-			get { return "4.7.0"; }
+			get { return "4.7.5"; }
 		}
 
 		public void Init(IPA.Logging.Logger log)
@@ -256,24 +256,12 @@ namespace CustomAvatar
 			camera.cullingMask |= 1 << AvatarLayers.OnlyInFirstPerson;
 		}
 
-		public void OnFixedUpdate()
-		{
+		public void OnFixedUpdate() { }
 
-		}
+		public void OnSceneUnloaded(Scene scene) { }
 
-		public void OnSceneUnloaded(Scene scene)
-		{
+		public void OnActiveSceneChanged(Scene prevScene, Scene nextScene) { }
 
-		}
-
-		public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
-		{
-
-		}
-
-		public void OnApplicationStart()
-		{
-
-		}
+		public void OnApplicationStart() { }
 	}
 }

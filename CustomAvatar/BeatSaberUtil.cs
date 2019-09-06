@@ -34,16 +34,16 @@ namespace CustomAvatar
 		{
 			_playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
 
-			var originObject = GameObject.Find("Origin");
-			if (originObject != null)
-			{
-				_originTransform = originObject.transform;
-			}
+			//var originObject = GameObject.Find("Origin");
+			//if (originObject != null)
+			//{
+			//	_originTransform = originObject.transform;
+			//}
 		}
 
 		public static float GetPlayerHeight()
 		{
-			var playerHeight = _playerDataModel == null ? _lastPlayerHeight : _playerDataModel.currentLocalPlayer.playerSpecificSettings.playerHeight;
+			var playerHeight = _playerDataModel == null ? _lastPlayerHeight : _playerDataModel.playerData.playerSpecificSettings.playerHeight;
 
 			_lastPlayerHeight = playerHeight;
 			return playerHeight;
